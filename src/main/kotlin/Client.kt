@@ -5,17 +5,17 @@ import java.util.*
 import kotlin.concurrent.thread
 
 fun main() {
-	val client = Client("alex")
+	println("Enter your username: ")
+	val client = Client(readln())
 	client.run()
 }
 
-
-class Client(private val username: String, host: String = "127.0.0.1", port: Int = 8080) {
+class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 	private val socket = Socket(host, port)
 	private var connected = true
 
 	init {
-		if(!this.socket.isConnected || this.socket.isClosed) {
+		if (!this.socket.isConnected || this.socket.isClosed) {
 			throw IOException("Connection to server failed!")
 		}
 		println("Connected to $host on port $port")
@@ -27,17 +27,20 @@ class Client(private val username: String, host: String = "127.0.0.1", port: Int
 	fun run() {
 		thread { receive() }
 
-		while(true) {
-			println("Enter a message to send: ")
-			send(readln())
+		while (connected) {
+			println("Enter a message to send:")
+			when (val input = readln()) {
+				"EXIT" -> disconnect()
+				else -> send(input)
+			}
 		}
 	}
 
-	fun send(message: String) {
+	private fun send(message: String) {
 		if (socket.isClosed) {
 			throw IOException("Connection closed")
 		}
-		socket.getOutputStream().write((message + '\n').toByteArray(StandardCharsets.UTF_8))
+		sendMessageToSocket(socket, message)
 	}
 
 	/**
@@ -45,14 +48,19 @@ class Client(private val username: String, host: String = "127.0.0.1", port: Int
 	 */
 	private fun receive() {
 		while (connected) {
-			println(reader.nextLine())
+			try {
+				println(reader.nextLine())
+			} catch (e: NoSuchElementException) {
+				println("Server connection lost…")
+				connected = false
+			}
 		}
 	}
 
 	/**
 	 * Disconnects from server and ends anything that uses connected as a loop condition
 	 */
-	fun disconnect() {
+	private fun disconnect() {
 		connected = false
 		socket.close()
 		println("Disconnected from server")

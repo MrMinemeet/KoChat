@@ -1,7 +1,5 @@
 import java.net.ServerSocket
 import java.net.Socket
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -11,53 +9,47 @@ fun main() {
 }
 
 class Server(private val port: Int) {
-	object SServer {
-		val messagesToSend = mutableListOf<Message>()
-		val clientList = mutableListOf<Socket>()
-	}
-
 	private val server = ServerSocket(port)
 
-	fun listen() {
-		println("Server listening on port $port")
-		thread { distributeMessages() }
-		while (true) {
-			val socket = server.accept()
-			thread {
-				SServer.clientList.add(socket)
-				ClientHandler(socket).run()
-			}
+	object SServer {
+		val clientList = mutableListOf<ClientData>()
+
+
+		fun distributeMessages(msg: Message) {
+			 clientList
+				.filterNot { it == msg.sender }
+				.forEach { (_, socket) ->
+					sendMessageToSocket(socket, msg.toString())
+				}
 		}
 	}
 
-	private fun distributeMessages() {
+	fun listen() {
+		println("Server listening on port $port")
 		while (true) {
-			if (SServer.messagesToSend.isNotEmpty()) {
-				val msg = SServer.messagesToSend.removeAt(0)
-				println("Forwarding message from ${msg.sender}")
-				SServer.clientList.forEach { socket ->
-					sendToClient(socket, msg.toString())
-				}
+			val socket = server.accept()
+			thread {
+				ClientHandler(socket).run()
 			}
-			Thread.sleep(1000)
 		}
 	}
 
 	class ClientHandler(private val client: Socket) {
 		private val reader = Scanner(client.getInputStream())
 
-
 		fun run() {
 			// First message of a client is the name
-			val name = reader.nextLine()
-			println("User '$name' with address '${client.inetAddress.hostAddress}' connected")
+			val sender = ClientData(reader.nextLine(), client)
+			SServer.clientList.add(sender)
+			println("User '${sender.name}' with address '${client.inetAddress.hostAddress}:${client.port}' connected")
 			while (true) {
 				try {
 					val message = reader.nextLine()
-					println("Message from $name received: $message")
-					Message(name, message).let { SServer.messagesToSend.add(it) }
+					println("Message from $sender: $message")
+					val msg = Message(sender, message)
+					SServer.distributeMessages(msg)
 				} catch (e: NoSuchElementException) {
-					println("Client disconnected: ${client.inetAddress.hostAddress}")
+					println("Client lost connection: ${client.inetAddress.hostAddress}")
 					break
 				}
 			}
@@ -65,14 +57,22 @@ class Server(private val port: Int) {
 	}
 }
 
-fun sendToClient(client: Socket, message: String) {
-	val writer = client.getOutputStream()
-	// Explicit encoding into UTF-8
-	writer.write((message + '\n').toByteArray(StandardCharsets.UTF_8))
+data class Message(val sender: ClientData, val content: String) {
+
+	override fun toString(): String {
+		return "${sender.name}: $content"
+	}
 }
 
-data class Message(val sender: String, val content: String) {
+data class ClientData(val name: String, val client: Socket) {
 	override fun toString(): String {
-		return "$sender: $content"
+		return "$name <${client.inetAddress.hostAddress}:${client.port}>"
+	}
+
+	override fun equals(other: Any?): Boolean {
+		if (other is ClientData) {
+			return this.name == other.name && this.client == other.client
+		}
+		return false
 	}
 }

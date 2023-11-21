@@ -5,32 +5,31 @@ import java.util.*
 import kotlin.concurrent.thread
 
 fun main() {
-	val host = "127.0.0.1"
-	val client = Client(host)
+	val client = Client("alex")
 	client.run()
 }
 
 
-class Client(host: String, port: Int = 8080) {
+class Client(private val username: String, host: String = "127.0.0.1", port: Int = 8080) {
 	private val socket = Socket(host, port)
 	private var connected = true
 
 	init {
 		if(!this.socket.isConnected || this.socket.isClosed) {
 			throw IOException("Connection to server failed!")
-		} else {
-			println("Connected to $host on port $port")
 		}
+		println("Connected to $host on port $port")
+		send(username)
 	}
 
 	private val reader = Scanner(socket.getInputStream(), StandardCharsets.UTF_8.name())
-	private val writer = socket.getOutputStream()
 
 	fun run() {
 		thread { receive() }
 
 		while(true) {
-			Thread.sleep(200)
+			println("Enter a message to send: ")
+			send(readln())
 		}
 	}
 
@@ -38,9 +37,7 @@ class Client(host: String, port: Int = 8080) {
 		if (socket.isClosed) {
 			throw IOException("Connection closed")
 		}
-
-		val outputStream = socket.getOutputStream()
-		outputStream.writer().write(message + "\n")
+		socket.getOutputStream().write((message + '\n').toByteArray(StandardCharsets.UTF_8))
 	}
 
 	/**

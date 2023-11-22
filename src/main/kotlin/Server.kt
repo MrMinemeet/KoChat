@@ -4,8 +4,7 @@ import java.util.*
 import kotlin.concurrent.thread
 
 fun main() {
-	val port = 8080
-	Server(port).listen()
+	Server(PORT).listen()
 }
 
 class Server(private val port: Int) {

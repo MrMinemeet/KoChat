@@ -1,5 +1,8 @@
 import java.net.Socket
 import java.nio.charset.StandardCharsets
+import java.time.Instant
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 /**
  * Sends a message to a socket
@@ -13,3 +16,13 @@ fun sendMessageToSocket(client: Socket, message: String) {
 }
 
 const val ID_DISCONNECT = "#DISCONNECT"
+
+object Logger {
+	fun log(message: String) {
+		val timestamp = DateTimeFormatter
+			.ofPattern("yyyy-MM-dd HH:mm:ss")
+			.withZone(ZoneOffset.UTC)
+			.format(Instant.now())
+		println("$timestamp -> $message")
+	}
+}

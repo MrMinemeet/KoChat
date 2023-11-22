@@ -28,7 +28,7 @@ class Server(private val port: Int) {
 	 * Starts up a new thread for each client
 	 */
 	fun listen() {
-		println("Server listening on port $port")
+		Logger.log("Server listening on port $port")
 		while (true) {
 			thread {
 				ClientHandler(server.accept()).run()
@@ -47,13 +47,13 @@ class Server(private val port: Int) {
 			val senderName: String = try {
 				reader.nextLine()
 			} catch (e: NoSuchElementException) {
-				println("No name received from '${client.inetAddress.hostAddress}:${client.port}'")
+				Logger.log("No name received from '${client.inetAddress.hostAddress}:${client.port}'")
 				client.close()
 				return
 			}
 			val sender = ClientData(senderName, client)
 			SServer.connectedClients.add(sender)
-			println("User '${sender}' connected")
+			Logger.log("User '${sender}' connected")
 			while (true) {
 				try {
 					val message = reader.nextLine()
@@ -62,11 +62,11 @@ class Server(private val port: Int) {
 						break
 					}
 
-					println("Message from $sender: $message")
+					Logger.log("Message from $sender: $message")
 					val msg = Message(sender, message)
 					SServer.distributeMessages(msg)
 				} catch (e: NoSuchElementException) {
-					println("User '$sender' lost connection")
+					Logger.log("User '$sender' lost connection")
 					break
 				}
 			}
@@ -78,7 +78,7 @@ class Server(private val port: Int) {
 		private fun disconnect(sender: ClientData) {
 			client.close()
 			SServer.connectedClients.remove(sender)
-			println("User '$sender' disconnected")
+			Logger.log("User '$sender' disconnected")
 		}
 	}
 }

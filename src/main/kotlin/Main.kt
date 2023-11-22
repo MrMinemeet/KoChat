@@ -1,3 +1,4 @@
+import java.net.ConnectException
 
 const val PORT = 8080
 fun main(args: Array<String>) {
@@ -5,6 +6,10 @@ fun main(args: Array<String>) {
 		Server(PORT).listen()
 	} else {
 		println("Enter your username: ")
-		Client(readln()).run()
+		try {
+			Client(readln()).run()
+		} catch (e: ConnectException) {
+			println("Failed to connect to server!")
+		}
 	}
 }

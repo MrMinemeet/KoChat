@@ -6,11 +6,14 @@ import java.util.*
 import kotlin.concurrent.thread
 
 fun main() {
+	println("Enter a address to connect to: ")
+	val address = readln()
+
 	println("Enter your username: ")
 	try {
-		Client(readln()).run()
+		Client(readln(), host=address).run()
 	} catch (e: ConnectException) {
-		println("Failed to connect to server!")
+		println("Failed to connect to server with address '$address!")
 	}
 }
 

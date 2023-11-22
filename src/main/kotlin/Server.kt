@@ -3,32 +3,35 @@ import java.net.Socket
 import java.util.*
 import kotlin.concurrent.thread
 
-fun main() {
-	Server(PORT).listen()
-}
-
 class Server(private val port: Int) {
 	private val server = ServerSocket(port)
 
 	object SServer {
-		val clientList = mutableListOf<ClientData>()
+		// List of all connected clients
+		val connectedClients = mutableListOf<ClientData>()
 
-
-		fun distributeMessages(msg: Message) {
-			clientList
-				.filterNot { it == msg.sender }
+		/**
+		 * Sends a message to all clients except the sender
+		 * @param message The message to send
+		 */
+		fun distributeMessages(message: Message) {
+			connectedClients
+				.filterNot { it == message.sender }
 				.forEach { (_, socket) ->
-					sendMessageToSocket(socket, msg.toString())
+					sendMessageToSocket(socket, message.toString())
 				}
 		}
 	}
 
+	/**
+	 * Listens for incoming client connections
+	 * Starts up a new thread for each client
+	 */
 	fun listen() {
 		println("Server listening on port $port")
 		while (true) {
-			val socket = server.accept()
 			thread {
-				ClientHandler(socket).run()
+				ClientHandler(server.accept()).run()
 			}
 		}
 	}
@@ -36,6 +39,9 @@ class Server(private val port: Int) {
 	class ClientHandler(private val client: Socket) {
 		private val reader = Scanner(client.getInputStream())
 
+		/**
+		 * Handles incoming messages from a client
+		 */
 		fun run() {
 			// First message of a client is the name
 			val senderName: String = try {
@@ -46,7 +52,7 @@ class Server(private val port: Int) {
 				return
 			}
 			val sender = ClientData(senderName, client)
-			SServer.clientList.add(sender)
+			SServer.connectedClients.add(sender)
 			println("User '${sender}' connected")
 			while (true) {
 				try {
@@ -66,21 +72,33 @@ class Server(private val port: Int) {
 			}
 		}
 
+		/**
+		 * Disconnects a client
+		 */
 		private fun disconnect(sender: ClientData) {
 			client.close()
-			SServer.clientList.remove(sender)
+			SServer.connectedClients.remove(sender)
 			println("User '$sender' disconnected")
 		}
 	}
 }
 
+/**
+ * Message from a client with content.
+ * @param sender The client that sent the message
+ * @param content The content of the message
+ */
 data class Message(val sender: ClientData, val content: String) {
-
 	override fun toString(): String {
 		return "${sender.name}: $content"
 	}
 }
 
+/**
+ * Data class for a client
+ * @param name The name of the client
+ * @param client The socket of the client
+ */
 data class ClientData(val name: String, val client: Socket) {
 	override fun toString(): String {
 		return "$name <${client.inetAddress.hostAddress}:${client.port}>"

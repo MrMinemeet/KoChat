@@ -5,18 +5,6 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 import kotlin.concurrent.thread
 
-fun main() {
-	println("Enter a address to connect to: ")
-	val address = readln()
-
-	println("Enter your username: ")
-	try {
-		Client(readln(), host=address).run()
-	} catch (e: ConnectException) {
-		println("Failed to connect to server with address '$address!")
-	}
-}
-
 class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 	private val socket = Socket(host, port)
 	private var connected = true
@@ -31,6 +19,9 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 
 	private val reader = Scanner(socket.getInputStream(), StandardCharsets.UTF_8.name())
 
+	/**
+	 * Starts the client and listens for input
+	 */
 	fun run() {
 		thread { receive() }
 
@@ -43,6 +34,11 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 		}
 	}
 
+	/**
+	 * Sends a message to the server
+	 * @param message The message to send
+	 * @throws IOException If the connection is closed
+	 */
 	private fun send(message: String) {
 		if (!connected) {
 			throw IOException("Connection is closed")
@@ -51,7 +47,8 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 	}
 
 	/**
-	 * Checks for new messages in a polling-style
+	 * Checks for new messages via a blocking call.
+	 * If the connection is lost, it will print an error and set connected to false
 	 */
 	private fun receive() {
 		while (connected) {

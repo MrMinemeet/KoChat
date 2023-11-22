@@ -1,4 +1,5 @@
 import java.io.IOException
+import java.net.ConnectException
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -6,8 +7,11 @@ import kotlin.concurrent.thread
 
 fun main() {
 	println("Enter your username: ")
-	val client = Client(readln())
-	client.run()
+	try {
+		Client(readln()).run()
+	} catch (e: ConnectException) {
+		println("Failed to connect to server!")
+	}
 }
 
 class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {

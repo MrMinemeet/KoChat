@@ -6,3 +6,6 @@ fun sendMessageToSocket(client: Socket, message: String) {
 	// Explicit encoding into UTF-8
 	writer.write((message + '\n').toByteArray(StandardCharsets.UTF_8))
 }
+
+
+const val ID_DISCONNECT = "#DISCONNECT"

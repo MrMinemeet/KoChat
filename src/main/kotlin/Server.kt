@@ -15,7 +15,7 @@ class Server(private val port: Int) {
 
 
 		fun distributeMessages(msg: Message) {
-			 clientList
+			clientList
 				.filterNot { it == msg.sender }
 				.forEach { (_, socket) ->
 					sendMessageToSocket(socket, msg.toString())
@@ -38,20 +38,38 @@ class Server(private val port: Int) {
 
 		fun run() {
 			// First message of a client is the name
-			val sender = ClientData(reader.nextLine(), client)
+			val senderName: String = try {
+				reader.nextLine()
+			} catch (e: NoSuchElementException) {
+				println("No name received from '${client.inetAddress.hostAddress}:${client.port}'")
+				client.close()
+				return
+			}
+			val sender = ClientData(senderName, client)
 			SServer.clientList.add(sender)
-			println("User '${sender.name}' with address '${client.inetAddress.hostAddress}:${client.port}' connected")
+			println("User '${sender}' connected")
 			while (true) {
 				try {
 					val message = reader.nextLine()
+					if (message == ID_DISCONNECT) {
+						disconnect(sender)
+						break
+					}
+
 					println("Message from $sender: $message")
 					val msg = Message(sender, message)
 					SServer.distributeMessages(msg)
 				} catch (e: NoSuchElementException) {
-					println("Client lost connection: ${client.inetAddress.hostAddress}")
+					println("User '$sender' lost connection")
 					break
 				}
 			}
+		}
+
+		private fun disconnect(sender: ClientData) {
+			client.close()
+			SServer.clientList.remove(sender)
+			println("User '$sender' disconnected")
 		}
 	}
 }
@@ -73,5 +91,9 @@ data class ClientData(val name: String, val client: Socket) {
 			return this.name == other.name && this.client == other.client
 		}
 		return false
+	}
+
+	override fun hashCode(): Int {
+		return name.hashCode() + client.hashCode()
 	}
 }

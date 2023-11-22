@@ -37,8 +37,8 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 	}
 
 	private fun send(message: String) {
-		if (socket.isClosed) {
-			throw IOException("Connection closed")
+		if (!connected) {
+			throw IOException("Connection is closed")
 		}
 		sendMessageToSocket(socket, message)
 	}
@@ -51,8 +51,11 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 			try {
 				println(reader.nextLine())
 			} catch (e: NoSuchElementException) {
-				println("Server connection lost…")
-				connected = false
+				// Only print error if it was still connected
+				if (connected) {
+					println("Server connection lost…")
+					connected = false
+				}
 			}
 		}
 	}
@@ -61,6 +64,7 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 	 * Disconnects from server and ends anything that uses connected as a loop condition
 	 */
 	private fun disconnect() {
+		send(ID_DISCONNECT)
 		connected = false
 		socket.close()
 		println("Disconnected from server")

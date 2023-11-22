@@ -1,0 +1,13 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="KoChat:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/KoChat_jar</output-path>
+    <root id="archive" name="Kotlin.main.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="Kotlin.main" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/13.0/919f0dfe192fb4e063e7dacadee7f8bb9a2672a9/annotations-13.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.9.20/e58b4816ac517e9cc5df1db051120c63d4cde669/kotlin-stdlib-1.9.20.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

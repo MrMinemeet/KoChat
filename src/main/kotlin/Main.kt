@@ -12,7 +12,7 @@ fun main(args: Array<String>) {
 		try {
 			Client(readln(), host=address).run()
 		} catch (e: ConnectException) {
-			println("Failed to connect to server!")
+			println("Failed to connect to server with address '$address!")
 		}
 	}
 }

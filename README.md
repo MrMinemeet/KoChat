@@ -4,6 +4,8 @@ Basic Chat app written in Kotlin as the project for the Special Topic [Programmi
 ## Usage
 1. Start the server via the argument `-s` or `--server`
 2. Start one or multiple clients (no argument needed)
-3. When a connection is established, conversation is possible
+3. Enter address of the server and a username
+4. When a connection is established, conversation is possible
 
-Currently, the client connects to `127.0.0.1:8080` per default.
+## Things to keep in mind:
+Currently, the port 8080 is hardcoded.

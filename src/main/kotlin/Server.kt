@@ -30,8 +30,9 @@ class Server(private val port: Int) {
 	fun listen() {
 		Logger.log("Server listening on port $port")
 		while (true) {
+			val client = server.accept()
 			thread {
-				ClientHandler(server.accept()).run()
+				ClientHandler(client).run()
 			}
 		}
 	}

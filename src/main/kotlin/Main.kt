@@ -10,7 +10,7 @@ fun main(args: Array<String>) {
 
 		println("Enter your username: ")
 		try {
-			Client(readln(), host=address).run()
+			Client(readln(), host = address).run()
 		} catch (e: ConnectException) {
 			println("Failed to connect to server with address '$address!")
 		}

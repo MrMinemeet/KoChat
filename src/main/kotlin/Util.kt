@@ -1,8 +1,11 @@
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.time.Instant
-import java.time.ZoneOffset
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+
+/** Indicates a proper disconnect from the server */
+const val ID_DISCONNECT = "#DISCONNECT"
 
 /**
  * Sends a message to a socket
@@ -15,14 +18,23 @@ fun sendMessageToSocket(client: Socket, message: String) {
 	writer.write((message + '\n').toByteArray(StandardCharsets.UTF_8))
 }
 
-const val ID_DISCONNECT = "#DISCONNECT"
+/**
+ * Gets the current timestamp in UTC
+ * @return The timestamp as a string
+ */
+fun getTimestamp(zId: ZoneId = ZoneId.systemDefault()): String {
+	return DateTimeFormatter
+		.ofPattern("yyyy-MM-dd HH:mm:ss")
+		.withZone(zId)
+		.format(Instant.now())
+}
 
 object Logger {
+	/**
+	 * Logs a message to the console
+	 * @param message The message to log
+	 */
 	fun log(message: String) {
-		val timestamp = DateTimeFormatter
-			.ofPattern("yyyy-MM-dd HH:mm:ss")
-			.withZone(ZoneOffset.UTC)
-			.format(Instant.now())
-		println("$timestamp -> $message")
+		println("${getTimestamp()} -> $message")
 	}
 }

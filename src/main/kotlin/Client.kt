@@ -1,5 +1,4 @@
 import java.io.IOException
-import java.net.ConnectException
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.util.*
@@ -13,7 +12,6 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 		if (!this.socket.isConnected || this.socket.isClosed) {
 			throw IOException("Connection to server failed!")
 		}
-		println("Connected to $host on port $port")
 		send(username)
 	}
 
@@ -23,10 +21,11 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 	 * Starts the client and listens for input
 	 */
 	fun run() {
+		println("--- Connected to server ---")
 		thread { receive() }
 
+		println("Enter a message to send to the server or 'EXIT' to disconnect: ")
 		while (connected) {
-			println("Enter a message to send:")
 			when (val input = readln()) {
 				"EXIT" -> disconnect()
 				else -> send(input)
@@ -53,7 +52,8 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 	private fun receive() {
 		while (connected) {
 			try {
-				println(reader.nextLine())
+				val msg = reader.nextLine()
+				println("${getTimestamp()} | $msg")
 			} catch (e: NoSuchElementException) {
 				// Only print error if it was still connected
 				if (connected) {
@@ -71,6 +71,6 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 		send(ID_DISCONNECT)
 		connected = false
 		socket.close()
-		println("Disconnected from server")
+		println("--- Disconnected from server ---")
 	}
 }

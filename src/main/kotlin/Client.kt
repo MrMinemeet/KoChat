@@ -1,8 +1,9 @@
 import java.io.IOException
 import java.net.Socket
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Scanner
 import kotlin.concurrent.thread
+import kotlin.system.exitProcess
 
 class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 	private val socket = Socket(host, port)
@@ -24,12 +25,22 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 		println("--- Connected to server ---")
 		thread { receive() }
 
-		println("Enter a message to send to the server or 'EXIT' to disconnect: ")
-		while (connected) {
-			when (val input = readln()) {
-				"EXIT" -> disconnect()
-				else -> send(input)
+		try {
+			println("Enter a message to send to the server or 'EXIT' to disconnect: ")
+			while (connected) {
+				when (val input = readln()) {
+					"EXIT" -> disconnect()
+					else -> send(input)
+				}
 			}
+		} catch (e: Exception) {
+			println("An error occurred, while being connected to the server:")
+			println(e.message ?: "No error message provided")
+		} finally {
+			// Try to send the disconnect, but don't care if there are errors
+			send(ID_DISCONNECT, true)
+			connected = false
+			socket.close()
 		}
 	}
 
@@ -38,11 +49,17 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 	 * @param message The message to send
 	 * @throws IOException If the connection is closed
 	 */
-	private fun send(message: String) {
-		if (!connected) {
-			throw IOException("Connection is closed")
+	private fun send(message: String, ignoreErrors: Boolean = false) {
+		try {
+			if (!connected) {
+				throw IOException("Connection is closed")
+			}
+			sendMessageToSocket(socket, message)
+		} catch (e: Exception) {
+			if (!ignoreErrors) {
+				throw e
+			}
 		}
-		sendMessageToSocket(socket, message)
 	}
 
 	/**
@@ -59,6 +76,7 @@ class Client(username: String, host: String = "127.0.0.1", port: Int = 8080) {
 				if (connected) {
 					println("Server connection lost…")
 					connected = false
+					exitProcess(-1)
 				}
 			}
 		}

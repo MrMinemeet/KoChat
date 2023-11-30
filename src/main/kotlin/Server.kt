@@ -6,20 +6,21 @@ import kotlin.concurrent.thread
 class Server(private val port: Int) {
 	private val server = ServerSocket(port)
 
-	object SServer {
-		// List of all connected clients
-		val connectedClients = mutableListOf<ClientData>()
+	// List of all connected clients
+	private val connectedClients = mutableListOf<ClientData>()
 
-		/**
-		 * Sends a message to all clients except the sender
-		 * @param message The message to send
-		 */
-		fun distributeMessages(message: Message) {
-			connectedClients
-				.filterNot { it == message.sender }
-				.forEach { (_, socket) ->
-					sendMessageToSocket(socket, message.toString())
-				}
+	/**
+	 * Listens for incoming client requests.
+	 * Also catches any exceptions and ends the server in a soft manner
+	 */
+	fun listen() {
+		try {
+			listenerLoop()
+		} catch (e: Exception) {
+			Logger.log("!An error occurred while running the KoChat Server!")
+			Logger.log(e.message ?: "No error message provided.")
+		} finally {
+			server.close()
 		}
 	}
 
@@ -27,7 +28,7 @@ class Server(private val port: Int) {
 	 * Listens for incoming client connections
 	 * Starts up a new thread for each client
 	 */
-	fun listen() {
+	private fun listenerLoop() {
 		Logger.log("Server listening on port $port")
 		while (true) {
 			val client = server.accept()
@@ -37,7 +38,19 @@ class Server(private val port: Int) {
 		}
 	}
 
-	class ClientHandler(private val client: Socket) {
+	/**
+	 * Sends a message to all clients except the sender
+	 * @param message The message to send
+	 */
+	private fun distributeMessages(message: Message) {
+		connectedClients
+			.filterNot { it == message.sender }
+			.forEach { (_, socket) ->
+				sendMessageToSocket(socket, message.toString())
+			}
+	}
+
+	private inner class ClientHandler(private val client: Socket) {
 		private val reader = Scanner(client.getInputStream())
 
 		/**
@@ -53,7 +66,7 @@ class Server(private val port: Int) {
 				return
 			}
 			val sender = ClientData(senderName, client)
-			SServer.connectedClients.add(sender)
+			connectedClients.add(sender)
 			Logger.log("User '${sender}' connected")
 			while (true) {
 				try {
@@ -65,7 +78,7 @@ class Server(private val port: Int) {
 
 					Logger.log("Message from $sender: $message")
 					val msg = Message(sender, message)
-					SServer.distributeMessages(msg)
+					distributeMessages(msg)
 				} catch (e: NoSuchElementException) {
 					Logger.log("User '$sender' lost connection")
 					break
@@ -78,7 +91,7 @@ class Server(private val port: Int) {
 		 */
 		private fun disconnect(sender: ClientData) {
 			client.close()
-			SServer.connectedClients.remove(sender)
+			connectedClients.remove(sender)
 			Logger.log("User '$sender' disconnected")
 		}
 	}
